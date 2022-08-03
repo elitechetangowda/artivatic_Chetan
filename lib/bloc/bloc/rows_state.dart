@@ -18,4 +18,9 @@ class RowsLoaded extends RowsState{
   const RowsLoaded(this.exercise);
 }
 
+class RowsError extends RowsState {
+  final String? message;
+  const RowsError(this.message);
+}
+
 

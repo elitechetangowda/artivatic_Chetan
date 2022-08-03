@@ -8,3 +8,5 @@ class ApiRepository {
     return _provider.fetchExerciseList();
   }
 }
+
+class NetworkError extends Error {}

@@ -6,3 +6,5 @@ abstract class RowsEvent extends Equatable {
   @override
   List<Object> get props => [];
 }
+class GetExerciseList extends RowsEvent {}
+
