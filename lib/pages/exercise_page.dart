@@ -17,7 +17,7 @@ class _ExercisePageState extends State<ExercisePage> {
       GlobalKey<RefreshIndicatorState>();
   Completer? completer;
   Icon actionIcon = const Icon(Icons.search);
-  Widget appBarTitle = const Text("AppBar Title");
+  Widget appBarTitle = const Text("Artivatic Exercise");
   List<dynamic>? rowsList = [];
 
   @override
@@ -52,7 +52,7 @@ class _ExercisePageState extends State<ExercisePage> {
               } else {
                 _rowsBloc.add(GetExerciseList());
                 actionIcon = const Icon(Icons.search);
-                appBarTitle = const Text("AppBar Title");
+                appBarTitle = const Text("Artivatic Exercise");
               }
             });
           },
@@ -85,7 +85,7 @@ class _ExercisePageState extends State<ExercisePage> {
                   return _buildListView(context, rowsList!);
                 } else if (state is RowsError) {
                   return Column(children: const [
-                    Text("No Data Found"),
+                    Center(child: Text("No Data Found"))
                   ]);
                 } else {
                   return Container();
