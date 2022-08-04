@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:artivatic_profiency_exercise/Model/exercise_response.dart';
 import 'package:artivatic_profiency_exercise/bloc/bloc/rows_bloc.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +15,9 @@ class ExercisePage extends StatefulWidget {
 class _ExercisePageState extends State<ExercisePage> {
   final RowsBloc _rowsBloc = RowsBloc();
   String appTitle = '';
-
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
+  Completer? completer;
   @override
   void initState() {
     super.initState();
@@ -26,32 +30,42 @@ class _ExercisePageState extends State<ExercisePage> {
       appBar: AppBar(
         title: Text(appTitle),
       ),
-      body: BlocProvider(
-        create: (_) => _rowsBloc,
-        child: BlocListener<RowsBloc, RowsState>(
-          listener: (context, state) {
-            if (state is RowsError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message!),
-                ),
-              );
-            }
-          },
-          child: BlocBuilder<RowsBloc, RowsState>(
-            builder: (context, state) {
-              if (state is RowsInitial) {
-                return _buildLoading();
-              } else if (state is RowsLoading) {
-                return _buildLoading();
-              } else if (state is RowsLoaded) {
-                return _buildListView(context, state.exercise);
-              } else if (state is RowsError) {
-                return Container();
-              } else {
-                return Container();
+      body: RefreshIndicator(
+        key: _refreshIndicatorKey,
+        onRefresh: () {
+       _rowsBloc.add(GetExerciseList());
+          completer = Completer();
+          return completer!.future;
+        },
+        child: BlocProvider(
+          create: (_) => _rowsBloc,
+          child: BlocListener<RowsBloc, RowsState>(
+            listener: (context, state) {
+              if (state is RowsError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message!),
+                  ),
+                );
               }
             },
+            child: BlocBuilder<RowsBloc, RowsState>(
+              builder: (context, state) {
+                if (state is RowsInitial) {
+                  return _buildLoading();
+                } else if (state is RowsLoading) {
+                  return _buildLoading();
+                } else if (state is RowsLoaded) {
+                  completer?.complete();
+                  completer = null;
+                  return _buildListView(context, state.exercise);
+                } else if (state is RowsError) {
+                  return Container();
+                } else {
+                  return Container();
+                }
+              },
+            ),
           ),
         ),
       ),
