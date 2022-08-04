@@ -1,6 +1,4 @@
 import 'dart:async';
-
-import 'package:artivatic_profiency_exercise/Model/exercise_response.dart';
 import 'package:artivatic_profiency_exercise/bloc/bloc/rows_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +16,10 @@ class _ExercisePageState extends State<ExercisePage> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
   Completer? completer;
+  Icon actionIcon = const Icon(Icons.search);
+  Widget appBarTitle = const Text("AppBar Title");
+  List<dynamic>? rowsList = [];
+
   @override
   void initState() {
     super.initState();
@@ -26,14 +28,40 @@ class _ExercisePageState extends State<ExercisePage> {
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController _textController = TextEditingController();
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(appTitle),
-      ),
+      appBar: AppBar(centerTitle: true, title: appBarTitle, actions: <Widget>[
+        IconButton(
+          icon: actionIcon,
+          onPressed: () {
+            setState(() {
+              if (actionIcon.icon == Icons.search) {
+                actionIcon = const Icon(Icons.close);
+                appBarTitle = TextField(
+                  onChanged: onItemChanged,
+                  controller: _textController,
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                  decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.search, color: Colors.white),
+                      hintText: "Search...",
+                      hintStyle: TextStyle(color: Colors.white)),
+                );
+              } else {
+                _rowsBloc.add(GetExerciseList());
+                actionIcon = const Icon(Icons.search);
+                appBarTitle = const Text("AppBar Title");
+              }
+            });
+          },
+        ),
+      ]),
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: () {
-       _rowsBloc.add(GetExerciseList());
+          _rowsBloc.add(GetExerciseList());
           completer = Completer();
           return completer!.future;
         },
@@ -41,26 +69,24 @@ class _ExercisePageState extends State<ExercisePage> {
           create: (_) => _rowsBloc,
           child: BlocListener<RowsBloc, RowsState>(
             listener: (context, state) {
-              if (state is RowsError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message!),
-                  ),
-                );
-              }
+              
             },
             child: BlocBuilder<RowsBloc, RowsState>(
               builder: (context, state) {
-                if (state is RowsInitial) {
+                 if (state is RowsInitial) {
                   return _buildLoading();
                 } else if (state is RowsLoading) {
                   return _buildLoading();
-                } else if (state is RowsLoaded) {
+                }
+               else if (state is RowsLoaded) {
                   completer?.complete();
                   completer = null;
-                  return _buildListView(context, state.exercise);
+                  rowsList = state.exercise.rows;
+                  return _buildListView(context, rowsList!);
                 } else if (state is RowsError) {
-                  return Container();
+                  return Column(children: const [
+                    Text("No Data Found"),
+                  ]);
                 } else {
                   return Container();
                 }
@@ -72,28 +98,31 @@ class _ExercisePageState extends State<ExercisePage> {
     );
   }
 
-  Widget _buildListView(BuildContext context, Exercise model) {
-    appTitle = model.title!;
+  onItemChanged(String value) {
+    _rowsBloc.add(RowsSearchList(filter: value));
+  }
+
+  Widget _buildListView(BuildContext context, List<dynamic> rowsList) {
     return ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(5),
         shrinkWrap: true,
-        itemCount: model.rows!.length,
+        itemCount: rowsList.length,
         itemBuilder: (context, index) {
           return Card(
             child: ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.white,
                 radius: 25,
-                child: (model.rows![index]['imageHref'] != null)
-                    ? Image.network(model.rows![index]['imageHref'])
+                child: (rowsList[index]['imageHref'] != null)
+                    ? Image.network(rowsList[index]['imageHref'])
                     : Container(),
               ),
-              title: (model.rows![index]['title'] != null)
-                  ? Text(model.rows![index]['title'])
+              title: (rowsList[index]['title'] != null)
+                  ? Text(rowsList[index]['title'])
                   : Container(),
-              subtitle: (model.rows![index]['description'] != null)
-                  ? Text(model.rows![index]['description'])
+              subtitle: (rowsList[index]['description'] != null)
+                  ? Text(rowsList[index]['description'])
                   : Container(),
             ),
           );
