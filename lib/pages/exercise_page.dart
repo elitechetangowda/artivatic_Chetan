@@ -3,7 +3,6 @@ import 'package:artivatic_profiency_exercise/bloc/bloc/rows_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-
 class ExercisePage extends StatefulWidget {
   const ExercisePage({Key? key}) : super(key: key);
 
@@ -13,6 +12,7 @@ class ExercisePage extends StatefulWidget {
 
 class _ExercisePageState extends State<ExercisePage> {
   final RowsBloc _rowsBloc = RowsBloc();
+  String appTitle = '';
 
   @override
   void initState() {
@@ -22,10 +22,11 @@ class _ExercisePageState extends State<ExercisePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.amberAccent,
-      margin: const EdgeInsets.all(8.0),
-      child: BlocProvider(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(appTitle),
+      ),
+      body: BlocProvider(
         create: (_) => _rowsBloc,
         child: BlocListener<RowsBloc, RowsState>(
           listener: (context, state) {
@@ -44,7 +45,7 @@ class _ExercisePageState extends State<ExercisePage> {
               } else if (state is RowsLoading) {
                 return _buildLoading();
               } else if (state is RowsLoaded) {
-                return _buildCard(context, state.exercise);
+                return _buildListView(context, state.exercise);
               } else if (state is RowsError) {
                 return Container();
               } else {
@@ -57,27 +58,32 @@ class _ExercisePageState extends State<ExercisePage> {
     );
   }
 
-  Widget _buildCard(BuildContext context, Exercise model) {
+  Widget _buildListView(BuildContext context, Exercise model) {
+    appTitle = model.title!;
     return ListView.builder(
-      itemCount: model.rows!.length,
-      itemBuilder: (context, index) {
-        return Container(
-          color: Colors.red,
-          margin: const EdgeInsets.all(8.0),
-          child: Card(
-            child: Container(
-              margin: const EdgeInsets.all(8.0),
-              child: Column(
-                children: <Widget>[
-                  Text(
-                      "Total Confirmed: ${model.rows![index]}"),
-                ],
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(5),
+        shrinkWrap: true,
+        itemCount: model.rows!.length,
+        itemBuilder: (context, index) {
+          return Card(
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.white,
+                radius: 25,
+                child: (model.rows![index]['imageHref'] != null)
+                    ? Image.network(model.rows![index]['imageHref'])
+                    : Container(),
               ),
+              title: (model.rows![index]['title'] != null)
+                  ? Text(model.rows![index]['title'])
+                  : Container(),
+              subtitle: (model.rows![index]['description'] != null)
+                  ? Text(model.rows![index]['description'])
+                  : Container(),
             ),
-          ),
-        );
-      },
-    );
+          );
+        });
   }
 
   Widget _buildLoading() => const Center(child: CircularProgressIndicator());

@@ -15,7 +15,7 @@ class RowsBloc extends Bloc<RowsEvent, RowsState> {
     on<GetExerciseList>((event, emit) async {
       try {
         emit(RowsLoading());
-        final mList = await _apiRepository.fetchCovidList();
+        final mList = await _apiRepository.fetchExerciseList();
         emit(RowsLoaded(mList));
       } on NetworkError {
         emit( const RowsError("Failed to fetch data. is your device online?"));
